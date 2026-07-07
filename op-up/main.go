@@ -23,6 +23,7 @@ import (
 	"github.com/ethereum-optimism/optimism/op-devstack/devtest"
 	"github.com/ethereum-optimism/optimism/op-devstack/dsl"
 	"github.com/ethereum-optimism/optimism/op-devstack/presets"
+	"github.com/ethereum-optimism/optimism/op-devstack/sysgo"
 	opservice "github.com/ethereum-optimism/optimism/op-service"
 	"github.com/ethereum-optimism/optimism/op-service/cliapp"
 	"github.com/ethereum-optimism/optimism/op-service/client"
@@ -168,7 +169,10 @@ func newMinimalSystem(t *testingT) (sys *presets.Minimal, err error) {
 	}()
 	// op-up exposes a lightweight devnet; it does not need dispute-game helpers,
 	// and go-tests-short does not build kona-host for the challenger.
-	return presets.NewMinimalNoFaultProofs(t), nil
+	//
+	// Use Jovian since op-geth is used by main_test.go and later forks are not supported by
+	// op-geth (see comment there).
+	return presets.NewMinimalNoFaultProofs(t, presets.WithDeployerOptions(sysgo.WithJovianAtGenesis)), nil
 }
 
 func newSupernodeInteropSystem(t *testingT) (sys *presets.TwoL2SupernodeInterop, err error) {
