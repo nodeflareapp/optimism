@@ -4,8 +4,8 @@ import (
 	"fmt"
 
 	"github.com/ethereum-optimism/optimism/op-chain-ops/genesis"
-	"github.com/ethereum-optimism/optimism/op-core/forks"
 	"github.com/ethereum-optimism/optimism/op-core/superchain"
+	nodesuperchain "github.com/ethereum-optimism/optimism/op-node/superchain"
 
 	"github.com/ethereum-optimism/superchain-registry/validation"
 
@@ -151,9 +151,17 @@ func L2ProxyAdminOwner(chainID uint64) (common.Address, error) {
 }
 
 // DefaultHardforkSchedule is used to determine which hardforks should be activated by default.
+// It activates, at genesis, the most recent fork that has an activation timestamp scheduled on
+// OP Mainnet.
 func DefaultHardforkSchedule() *genesis.UpgradeScheduleDeployConfig {
+	const opMainnetChainID = 10
+	rollupConfig, err := nodesuperchain.LoadOPStackRollupConfig(opMainnetChainID)
+	if err != nil {
+		panic(fmt.Errorf("load op mainnet config: %w", err))
+	}
 	sched := &genesis.UpgradeScheduleDeployConfig{}
-	sched.ActivateForkAtGenesis(forks.Karst)
+	// Assumes that the EL forks are a subset of the CL forks.
+	sched.ActivateForkAtGenesis(rollupConfig.CurrentFork())
 
 	return sched
 }
