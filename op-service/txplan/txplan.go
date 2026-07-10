@@ -223,13 +223,15 @@ func WithEstimator(cl Estimator, invalidateOnNewBlock bool) Option {
 			tx.Gas.DependOn(&tx.AgainstBlock)
 		}
 		tx.Gas.Fn(func(ctx context.Context) (uint64, error) {
+			// Simulate with a legacy gas price so clients agree on tx.gasprice during
+			// estimation. In particular, op-reth currently exposes a zero gas price
+			// when eth_estimateGas is given EIP-1559 fee fields, which can change
+			// contract behavior even though the signed transaction pays a fee.
 			msg := ethereum.CallMsg{
 				From:       tx.Sender.Value(),
 				To:         tx.To.Value(),
 				Gas:        params.MaxTxGas, // max gas, will be estimated
-				GasPrice:   nil,
-				GasFeeCap:  tx.GasFeeCap.Value(),
-				GasTipCap:  tx.GasTipCap.Value(),
+				GasPrice:   tx.GasFeeCap.Value(),
 				Value:      tx.Value.Value(),
 				Data:       tx.Data.Value(),
 				AccessList: tx.AccessList.Value(),
